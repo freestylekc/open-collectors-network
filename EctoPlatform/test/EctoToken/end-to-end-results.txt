@@ -1,0 +1,11 @@
+Ecto token contract=0x1639f0ee6adc131a614dbf1befe563fec9ba03a9
+Ecto max tokens=150,000,000,000,000,000,000,000,000
+Trusteee contract=0x1654932981aef4db49fb12d2869fd2b1d92bb5b3
+Token sale contract=0xe53e31f4786560c99abcd20012eb8a4c4c4cbace
+Lockbox contract=0xe4292bed50b673207129d7c65f2d78acba4a777d
+Sale contract tokens=105,000,000,000,000,000,000,000,000
+Trustee contract tokens=15,000,000,000,000,000,000,000,000
+Founder 1 tokens=7,500,000,000,000,000,000,000,000
+Founder 2 tokens=7,500,000,000,000,000,000,000,000
+Company tokens=15,000,000,000,000,000,000,000,000
+Tokend sale initialized!
