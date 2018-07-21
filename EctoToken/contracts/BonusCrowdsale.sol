@@ -1,17 +1,17 @@
-pragma solidity ^ 0.4.19;
+pragma solidity ^ 0.4 .19;
 
 import "openzeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./WhitelistedPausableCrowdsale.sol";
 
-    /**
-   * @dev Allows better rates for tokens, based on Ether amounts.
-   * Thresholds must be in decending order.
-   */
-contract BonusCrowdsale is WhitelistedPausableCrowdsale {
-
-    uint256[] bonuses;
-    uint256[] thresholds;
+/**
+ * @dev Allows better rates for tokens, based on Ether amounts.
+ * Thresholds must be in decending order.
+ */
+contract BonusCrowdsale is WhitelistedPausableCrowdsale
+{
+    uint256[] public bonuses;
+    uint256[] public thresholds;
 
     constructor(uint256[] _thresholds, uint256[] _bonuses) public
     {
@@ -26,13 +26,18 @@ contract BonusCrowdsale is WhitelistedPausableCrowdsale {
         bonuses = _bonuses;
     }
 
+    function getBonusCount() view public returns(uint256)
+    {
+        return bonuses.length;
+    }
+
     /**
-   * @dev Overrides parent method taking into account variable rate.
-   * @param _weiAmount The value in wei to be converted into tokens
-   * @return The number of tokens _weiAmount wei will buy at present time
-   */
+     * @dev Overrides parent method taking into account variable rate.
+     * @param _weiAmount The value in wei to be converted into tokens
+     * @return The number of tokens _weiAmount wei will buy at present time
+     */
     function _getTokenAmount(uint256 _weiAmount)
-    internal view returns (uint256)
+    internal view returns(uint256)
     {
         for (uint i = 0; i < thresholds.length; i++)
         {

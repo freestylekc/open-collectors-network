@@ -1,5 +1,5 @@
 var EctoToken = artifacts.require("./EctoToken.sol");
-var EctoTokenSale = artifacts.require("./EctoTokenSale.sol");
+var EctoTokenSale = artifacts.require("./EctoCrowdsale.sol");
 var Promise = require('bluebird');
 var fs = require('fs');
 var CryptoJS = require("crypto-js");
@@ -11,8 +11,11 @@ web3.eth.getBlock = Promise.promisify(web3.eth.getBlock);
 web3.eth.getTransactionReceipt = Promise.promisify(web3.eth.getTransactionReceipt);
 
 
-module.exports = async function (callback)
+module.exports = async function(callback)
 {
+
+    await printContractStates();
+
     //await whitelistAddresses();
 
     // encryption test with dummy mnemonic
@@ -21,9 +24,42 @@ module.exports = async function (callback)
     //console.log("Encrypted", encrypted);
     //console.log("Decrypted", decrypted);
 
-    await printContracts();
+    //await printContracts();
 
     callback("External script done.");
+}
+
+async function printContractStates()
+{
+    this.token = await EctoToken.at("0x5b99c09090afe5f64b146c19ebf71dd1457917e4");
+    this.crowdsale = await EctoTokenSale.at("0x80283ce9f88585ed571d72aa105b8aa56da96821");
+
+    var accounts = await web3.eth.getAccounts();
+    console.log("Accounts", accounts);
+    console.log("");
+
+    var totalSupply = await this.token.totalSupply();
+    console.log("Total token supply", web3.fromWei(totalSupply).toNumber().toLocaleString());
+
+    var balance = await this.token.balanceOf(this.crowdsale.address);
+    console.log("Crowdsale balance", web3.fromWei(balance).toNumber().toLocaleString());
+
+    balance = await this.token.balanceOf(accounts[0]);
+    console.log("Owner balance", web3.fromWei(balance).toNumber().toLocaleString());
+
+    var paused = await this.token.paused.call();
+    console.log("Token is: " + (paused ? "paused" : "running"));
+
+    paused = await this.crowdsale.paused.call();
+    console.log("Crowdsale is: " + (paused ? "paused" : "running"));
+
+    console.log("Bonuses:");
+    var bonusCount = await this.crowdsale.getBonusCount();
+    for (var i = 0; i < bonusCount; i++)
+    {
+        console.log("   " + (await this.crowdsale.bonuses.call(i)) + " % for " + web3.fromWei(await this.crowdsale.thresholds.call(i)).toNumber().toLocaleString());
+    }
+
 }
 
 async function printContracts()
@@ -52,19 +88,19 @@ async function whitelistAddresses()
     var addresses = fs.readFileSync('L:\\temp\\whitelist.csv')
         .toString()
         .split("\n")
-        .map(function (val)
+        .map(function(val)
         {
             return val.trim();
         })
 
     var validAddresses = addresses
-        .filter(function (val)
+        .filter(function(val)
         {
             return isAddress(val)
         });
 
     var invalidAddresses = addresses
-        .filter(function (val)
+        .filter(function(val)
         {
             return !isAddress(val)
         });

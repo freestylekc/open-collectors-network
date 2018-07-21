@@ -1,6 +1,7 @@
 var EctoToken = artifacts.require("./EctoToken.sol");
 var EctoCrowdsale = artifacts.require("./EctoCrowdsale.sol");
 var Promise = require('bluebird');
+var sleep = require('sleep');
 
 const ONE_WEEK = 7 * 24 * 60 * 60;
 const BigNumber = web3.BigNumber;
@@ -11,7 +12,7 @@ web3.eth.getTransactionCount = Promise.promisify(web3.eth.getTransactionCount);
 web3.eth.getBlock = Promise.promisify(web3.eth.getBlock);
 web3.eth.getTransactionReceipt = Promise.promisify(web3.eth.getTransactionReceipt);
 
-module.exports = function (deployer, network, accounts)
+module.exports = function(deployer, network, accounts)
 {
     deployer.then(async () =>
     {
@@ -25,10 +26,18 @@ module.exports = function (deployer, network, accounts)
         global.extraTokensPercentage = 35; // founders, company, advisers etc tokens percentage of total supply
         global.bonuses = // [min contribution in ETH, bonus percentage] and must be in decending order !
             [
-                { threshold: web3.toWei(3), bonus: 30 },
-                { threshold: web3.toWei(2), bonus: 20 },
-                { threshold: web3.toWei(1), bonus: 10 },
-            ];
+            {
+                threshold: web3.toWei(3),
+                bonus: 30
+            },
+            {
+                threshold: web3.toWei(2),
+                bonus: 20
+            },
+            {
+                threshold: web3.toWei(1),
+                bonus: 10
+            }, ];
 
         // deployment params
         this.gasToUseForContracts = 4700000;
@@ -50,7 +59,7 @@ module.exports = function (deployer, network, accounts)
         console.log(" ---------------------------------------------------------------- \r\n");
 
         // helper function to calc bonus rates in javascript
-        global.getRate = function (weiAmount)
+        global.getRate = function(weiAmount)
         {
             for (var i = 0; i < global.bonuses.length; i++)
             {
@@ -69,48 +78,79 @@ module.exports = function (deployer, network, accounts)
         var totalGasUsed = 0;
 
         // aim token deployment
-        this.token = await deployer.deploy(EctoToken, { from: ownerAddress, gas: gasToUseForContracts });
+        mainnetSleep(network);
+        this.token = await deployer.deploy(EctoToken,
+        {
+            from: ownerAddress,
+            gas: gasToUseForContracts
+        });
         var txReceipt = await web3.eth.getTransactionReceipt(this.token.transactionHash);
         console.log("Token deployed... with gas used", txReceipt.gasUsed);
         totalGasUsed += txReceipt.gasUsed;
 
+
         // aim token sale
-        this.sale = await deployer.deploy(
+        mainnetSleep(network);
+        this.crowdsale = await deployer.deploy(
             EctoCrowdsale,
             global.CAP,
             global.BASE_RATE,
             global.WALLET,
             token.address,
-            global.bonuses.map(function (val)
+            global.bonuses.map(function(val)
             {
                 return val.threshold;
             }),
-            global.bonuses.map(function (val)
+            global.bonuses.map(function(val)
             {
                 return val.bonus;
             }),
-            { from: ownerAddress, gas: gasToUseForContracts })
+            {
+                from: ownerAddress,
+                gas: gasToUseForContracts
+            })
 
-        txReceipt = await web3.eth.getTransactionReceipt(this.sale.transactionHash);
+
+        mainnetSleep(network);
+        txReceipt = await web3.eth.getTransactionReceipt(this.crowdsale.transactionHash);
         console.log("Sale deployed... with gas used", txReceipt.gasUsed);
         totalGasUsed += txReceipt.gasUsed;
 
         // pause token for everyone except owner and sale
-        var tx = await this.token.pause({ from: ownerAddress, gas: gasToUseForContracts });
+        mainnetSleep(network);
+        var tx = await this.token.pause(
+        {
+            from: ownerAddress,
+            gas: gasToUseForContracts
+        });
         totalGasUsed += tx.receipt.gasUsed;
-        console.log("TX", tx);
 
-        tx = await this.token.addExceptions([ownerAddress, this.sale.address], { from: ownerAddress, gas: gasToUseForContracts });
+        mainnetSleep(network);
+        tx = await this.token.addExceptions([ownerAddress, this.crowdsale.address],
+        {
+            from: ownerAddress,
+            gas: gasToUseForContracts
+        });
         totalGasUsed += tx.receipt.gasUsed;
         console.log("Token paused for transfers, except for owner & sale accounts...");
 
+        mainnetSleep(network);
         // pause sale
-        tx = await this.sale.pause({ from: ownerAddress, gas: gasToUseForContracts });
+        tx = await this.crowdsale.pause(
+        {
+            from: ownerAddress,
+            gas: gasToUseForContracts
+        });
         totalGasUsed += tx.receipt.gasUsed;
         console.log("Token sale paused...");
 
+        mainnetSleep(network);
         // transfer all non-extra tokens to crowdsale address
-        tx = await this.token.transfer(this.sale.address, (100 - global.extraTokensPercentage) / 100 * (await this.token.totalSupply()), { from: ownerAddress, gas: gasToUseForContracts });
+        tx = await this.token.transfer(this.crowdsale.address, (100 - global.extraTokensPercentage) / 100 * (await this.token.totalSupply()),
+        {
+            from: ownerAddress,
+            gas: gasToUseForContracts
+        });
         totalGasUsed += tx.receipt.gasUsed;
         console.log("Reserved tokens transferred...");
 
@@ -118,9 +158,9 @@ module.exports = function (deployer, network, accounts)
         var tokenOwner = await token.owner.call();
         console.log("Token address", this.token.address);
         console.log("Token owner", tokenOwner);
-        console.log("Sale address", this.sale.address);
+        console.log("Sale address", this.crowdsale.address);
         console.log("Token total supply", web3.fromWei((await this.token.totalSupply())).toNumber().toLocaleString());
-        console.log("Sale balance", web3.fromWei((await this.token.balanceOf(this.sale.address))).toNumber().toLocaleString());
+        console.log("Sale balance", web3.fromWei((await this.token.balanceOf(this.crowdsale.address))).toNumber().toLocaleString());
         console.log("Reserved balance", web3.fromWei((await this.token.balanceOf(ownerAddress))).toNumber().toLocaleString());
         console.log("");
         console.log("Total gas used", totalGasUsed.toLocaleString());
@@ -140,5 +180,14 @@ module.exports = function (deployer, network, accounts)
         var sec = a.getSeconds();
         var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
         return time;
+    }
+
+    function mainnetSleep(network)
+    {
+        if (network == "mainnet")
+        {
+            console.log("Sleeping ...");
+            sleep.sleep(120);
+        }
     }
 }
