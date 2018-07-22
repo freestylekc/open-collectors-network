@@ -1,4 +1,4 @@
-pragma solidity ^ 0.4.19;
+pragma solidity ^0.4.19;
 
 import "openzeppelin-solidity/contracts/crowdsale/validation/CappedCrowdsale.sol";
 import "openzeppelin-solidity/contracts/crowdsale/validation/WhitelistedCrowdsale.sol";

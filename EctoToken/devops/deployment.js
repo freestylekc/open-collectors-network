@@ -13,16 +13,9 @@ web3.eth.getTransactionReceipt = Promise.promisify(web3.eth.getTransactionReceip
 
 module.exports = async function(callback)
 {
-
     await printContractStates();
 
     //await whitelistAddresses();
-
-    // encryption test with dummy mnemonic
-    //var encrypted = CryptoJS.AES.encrypt("cool peanut work eager erosion palace alcohol exotic also asset approve weird", "test").toString();
-    //var decrypted = CryptoJS.AES.decrypt(encrypted, "test").toString(CryptoJS.enc.Utf8);
-    //console.log("Encrypted", encrypted);
-    //console.log("Decrypted", decrypted);
 
     //await printContracts();
 
@@ -31,8 +24,8 @@ module.exports = async function(callback)
 
 async function printContractStates()
 {
-    this.token = await EctoToken.at("0x5b99c09090afe5f64b146c19ebf71dd1457917e4");
-    this.crowdsale = await EctoTokenSale.at("0x80283ce9f88585ed571d72aa105b8aa56da96821");
+    this.token = await EctoToken.at("0x110fc94a29153ea49cef0d53df5d44a629bfc3b6");
+    this.crowdsale = await EctoTokenSale.at("0x69c68eaf0a942097e3cf59999b9121e7f99cad44");
 
     var accounts = await web3.eth.getAccounts();
     console.log("Accounts", accounts);
@@ -41,8 +34,11 @@ async function printContractStates()
     var totalSupply = await this.token.totalSupply();
     console.log("Total token supply", web3.fromWei(totalSupply).toNumber().toLocaleString());
 
+    var cap = await this.crowdsale.cap.call();
+    console.log("Sale cap", web3.fromWei(cap).toNumber().toLocaleString());
+
     var balance = await this.token.balanceOf(this.crowdsale.address);
-    console.log("Crowdsale balance", web3.fromWei(balance).toNumber().toLocaleString());
+    console.log("Crowdsale token balance", web3.fromWei(balance).toNumber().toLocaleString());
 
     balance = await this.token.balanceOf(accounts[0]);
     console.log("Owner balance", web3.fromWei(balance).toNumber().toLocaleString());
@@ -59,7 +55,6 @@ async function printContractStates()
     {
         console.log("   " + (await this.crowdsale.bonuses.call(i)) + " % for " + web3.fromWei(await this.crowdsale.thresholds.call(i)).toNumber().toLocaleString());
     }
-
 }
 
 async function printContracts()

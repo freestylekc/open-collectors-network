@@ -1,4 +1,4 @@
-pragma solidity ^ 0.4 .19;
+pragma solidity ^0.4.19;
 
 import "openzeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";

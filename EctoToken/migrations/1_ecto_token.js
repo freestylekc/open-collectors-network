@@ -21,7 +21,7 @@ module.exports = function(deployer, network, accounts)
 
         // sale params
         global.BASE_RATE = new BigNumber(6000);
-        global.CAP = web3.toWei(15, 'ether');
+        global.CAP = web3.toWei(15000, 'ether');
         global.WALLET = accounts[1];
         global.extraTokensPercentage = 35; // founders, company, advisers etc tokens percentage of total supply
         global.bonuses = // [min contribution in ETH, bonus percentage] and must be in decending order !

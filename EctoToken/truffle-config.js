@@ -29,7 +29,7 @@ module.exports = {
             provider: new HDWalletProvider(getMnemonic(), "https://mainnet.infura.io/" + infura_apikey, 0, 20),
             network_id: 1,
             gas: 4100000,
-            gasPrice: 8000000000 // gwei
+            gasPrice: 5000000000 // gwei
         },
     }
 };
